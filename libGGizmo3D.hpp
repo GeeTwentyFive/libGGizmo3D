@@ -12,38 +12,48 @@ using namespace linalg::aliases;
 #include "libs/libGCollision2/libGCollision2.hpp"
 
 namespace GGizmo3D {
-        enum Widget { NONE = -1, X_POSITIVE = 0, X_NEGATIVE = 1, Y_POSITIVE = 2, Y_NEGATIVE = 3, Z_POSITIVE = 4, Z_NEGATIVE = 5, _count };
-        struct Result {
-                Widget selected_widget = Widget::NONE;
-                gcollision2::AABB widget_aabbs[Widget::_count];
+        enum WidgetIndex { NONE = -1, X_POSITIVE = 0, X_NEGATIVE = 1, Y_POSITIVE = 2, Y_NEGATIVE = 3, Z_POSITIVE = 4, Z_NEGATIVE = 5, _count };
+        struct FrameDelta {
+                WidgetIndex selected_widget = WidgetIndex::NONE;
+                gcollision2::AABB widget_aabbs[WidgetIndex::_count];
         };
-        Result ProcessFrame(
-                bool pick,
-                float2 mouse_delta,
+        FrameDelta ProcessFrame(
+                bool pick,  // `false` = just calculate & give AABBs for drawing, `true` = also do screen-to-world gizmo widget pick test & return picked gizmo widget (if any, else NONE)
+                int mouse_x, int mouse_y,
                 float3 target_pos,
                 float3 camera_pos,
-                float2 window_size,
+                int window_width, int window_height,
                 float4x4* viewProjection,
                 float widget_length = 1.0f/4.0f, float widget_width = 1.0f/32.0f,
                 bool camera_distance_scale = true, float camera_distance_scale_multiplier = 1.0f
         ) {
+                FrameDelta frame_delta;
+
                 const float widget_scale = (camera_distance_scale) ? (
                         linalg::length(target_pos - camera_pos) * camera_distance_scale_multiplier
                 ) : 1.0f;
                 widget_length *= widget_scale; widget_width *= widget_scale;
+                frame_delta.widget_aabbs[WidgetIndex::X_POSITIVE] = {{target_pos.x+widget_width, target_pos.y - widget_width/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x+widget_width + widget_length/2.0f, target_pos.y + widget_width/2.0f, target_pos.z + widget_width/2.0f}};
+                frame_delta.widget_aabbs[WidgetIndex::X_NEGATIVE] = {{target_pos.x-widget_width - widget_length/2.0f, target_pos.y - widget_width/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x-widget_width, target_pos.y + widget_width/2.0f, target_pos.z + widget_width/2.0f}};
+                frame_delta.widget_aabbs[WidgetIndex::Y_POSITIVE] = {{target_pos.x - widget_width/2.0f, target_pos.y+widget_width, target_pos.z - widget_width/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y+widget_width + widget_length/2.0f, target_pos.z + widget_width/2.0f}};
+                frame_delta.widget_aabbs[WidgetIndex::Y_NEGATIVE] = {{target_pos.x - widget_width/2.0f, target_pos.y-widget_width - widget_length/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y-widget_width, target_pos.z + widget_width/2.0f}};
+                frame_delta.widget_aabbs[WidgetIndex::Z_POSITIVE] = {{target_pos.x - widget_width/2.0f, target_pos.y - widget_width/2.0f, target_pos.z+widget_width}, {target_pos.x + widget_width/2.0f, target_pos.y + widget_width/2.0f, target_pos.z+widget_width + widget_length/2.0f}};
+                frame_delta.widget_aabbs[WidgetIndex::Z_NEGATIVE] = {{target_pos.x - widget_width/2.0f, target_pos.y - widget_width/2.0f, target_pos.z-widget_width - widget_length/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y + widget_width/2.0f, target_pos.z-widget_width}};
 
-                const gcollision2::AABB widget_aabbs[Widget::_count] = {
-                        {{target_pos.x+widget_width, target_pos.y - widget_width/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x+widget_width + widget_length/2.0f, target_pos.y + widget_width/2.0f, target_pos.z + widget_width/2.0f}}, // +x
-                        {{target_pos.x-widget_width - widget_length/2.0f, target_pos.y - widget_width/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x-widget_width, target_pos.y + widget_width/2.0f, target_pos.z + widget_width/2.0f}}, // -x
-                        {{target_pos.x - widget_width/2.0f, target_pos.y+widget_width, target_pos.z - widget_width/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y+widget_width + widget_length/2.0f, target_pos.z + widget_width/2.0f}}, // +y
-                        {{target_pos.x - widget_width/2.0f, target_pos.y-widget_width - widget_length/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y-widget_width, target_pos.z + widget_width/2.0f}}, // -y
-                        {{target_pos.x - widget_width/2.0f, target_pos.y - widget_width/2.0f, target_pos.z+widget_width}, {target_pos.x + widget_width/2.0f, target_pos.y + widget_width/2.0f, target_pos.z+widget_width + widget_length/2.0f}}, // +z
-                        {{target_pos.x - widget_width/2.0f, target_pos.y - widget_width/2.0f, target_pos.z-widget_width - widget_length/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y + widget_width/2.0f, target_pos.z-widget_width}}  // -z
-                };
+                if (!pick) return frame_delta;
 
-                return {
-                        // TODO
-                };
+                const float3 ray_dir = GMisc3DMath::ScreenToWorldRay(mouse_x, mouse_y, window_width, window_height, viewProjection);
+                float closest_hit_widget_distance = FLT_MAX;
+                float distance;
+                for (int i = 0; i < WidgetIndex::_count; i++) {
+                        if (gcollision2::IntersectRayAABB(camera_pos, ray_dir,
+                                frame_delta.widget_aabbs[i], &distance
+                        )) if (distance < closest_hit_widget_distance) { closest_hit_widget_distance = distance;
+                                frame_delta.selected_widget = (WidgetIndex)i;
+                        }
+                }
+
+                return frame_delta;
         }
 }
 
