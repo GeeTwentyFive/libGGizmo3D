@@ -1,0 +1,24 @@
+[submodule "libs/libGMisc3DMath"]
+	path = libs/libGMisc3DMath
+	url = https://github.com/GeeTwentyFive/libGMisc3DMath.git
+[submodule "libs/libGCollision2"]
+	path = libs/libGCollision2
+	url = https://github.com/GeeTwentyFive/libGCollision2.git
+[submodule "libs/linalg"]
+	path = libs/linalg
+	url = https://github.com/sgorsten/linalg.git
+[submodule "_EXAMPLE/libs/linalg"]
+	path = _EXAMPLE/libs/linalg
+	url = https://github.com/sgorsten/linalg.git
+[submodule "_EXAMPLE/libs/libGWindower"]
+	path = _EXAMPLE/libs/libGWindower
+	url = https://github.com/GeeTwentyFive/libGWindower.git
+[submodule "_EXAMPLE/libs/GOBJ"]
+	path = _EXAMPLE/libs/GOBJ
+	url = https://github.com/GeeTwentyFive/GOBJ.git
+[submodule "_EXAMPLE/libs/GFramePacer"]
+	path = _EXAMPLE/libs/GFramePacer
+	url = https://github.com/GeeTwentyFive/GFramePacer.git
+[submodule "_EXAMPLE/libs/libGRenderer3D"]
+	path = _EXAMPLE/libs/libGRenderer3D
+	url = https://github.com/GeeTwentyFive/libGRenderer3D.git
