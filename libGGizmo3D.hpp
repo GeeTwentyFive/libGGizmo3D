@@ -17,17 +17,29 @@ namespace GGizmo3D {
                 Widget selected_widget = Widget::NONE;
                 gcollision2::AABB widget_aabbs[Widget::_count];
         };
-        Result Frame(
+        Result ProcessFrame(
                 bool pick,
                 float2 mouse_delta,
                 float3 target_pos,
                 float3 camera_pos,
                 float2 window_size,
                 float4x4* viewProjection,
-                float gizmo_length = 1.0f/4.0f, float gizmo_width = 1.0f/32.0f,
+                float widget_length = 1.0f/4.0f, float widget_width = 1.0f/32.0f,
                 bool camera_distance_scale = true, float camera_distance_scale_multiplier = 1.0f
         ) {
-                // TODO
+                const float widget_scale = (camera_distance_scale) ? (
+                        linalg::length(target_pos - camera_pos) * camera_distance_scale_multiplier
+                ) : 1.0f;
+                widget_length *= widget_scale; widget_width *= widget_scale;
+
+                const gcollision2::AABB widget_aabbs[Widget::_count] = {
+                        {{target_pos.x+widget_width, target_pos.y - widget_width/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x+widget_width + widget_length/2.0f, target_pos.y + widget_width/2.0f, target_pos.z + widget_width/2.0f}}, // +x
+                        {{target_pos.x-widget_width - widget_length/2.0f, target_pos.y - widget_width/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x-widget_width, target_pos.y + widget_width/2.0f, target_pos.z + widget_width/2.0f}}, // -x
+                        {{target_pos.x - widget_width/2.0f, target_pos.y+widget_width, target_pos.z - widget_width/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y+widget_width + widget_length/2.0f, target_pos.z + widget_width/2.0f}}, // +y
+                        {{target_pos.x - widget_width/2.0f, target_pos.y-widget_width - widget_length/2.0f, target_pos.z - widget_width/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y-widget_width, target_pos.z + widget_width/2.0f}}, // -y
+                        {{target_pos.x - widget_width/2.0f, target_pos.y - widget_width/2.0f, target_pos.z+widget_width}, {target_pos.x + widget_width/2.0f, target_pos.y + widget_width/2.0f, target_pos.z+widget_width + widget_length/2.0f}}, // +z
+                        {{target_pos.x - widget_width/2.0f, target_pos.y - widget_width/2.0f, target_pos.z-widget_width - widget_length/2.0f}, {target_pos.x + widget_width/2.0f, target_pos.y + widget_width/2.0f, target_pos.z-widget_width}}  // -z
+                };
 
                 return {
                         // TODO
