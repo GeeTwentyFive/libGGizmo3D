@@ -19,3 +19,9 @@
 [submodule "_EXAMPLE/libs/libGRenderer3D"]
 	path = _EXAMPLE/libs/libGRenderer3D
 	url = https://github.com/GeeTwentyFive/libGRenderer3D.git
+[submodule "_EXAMPLE/libs/libGMisc3DMath"]
+	path = _EXAMPLE/libs/libGMisc3DMath
+	url = https://github.com/GeeTwentyFive/libGMisc3DMath.git
+[submodule "_EXAMPLE/libs/libGLineRenderer3D"]
+	path = _EXAMPLE/libs/libGLineRenderer3D
+	url = https://github.com/GeeTwentyFive/libGLineRenderer3D.git
