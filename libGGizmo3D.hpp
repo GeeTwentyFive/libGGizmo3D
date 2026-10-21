@@ -1,14 +1,8 @@
 // https://github.com/GeeTwentyFive/libGGizmo3D
 #pragma once
 
-#include <math.h>
-#ifndef M_PI  // (Windows fix)
-#define M_PI 3.14159265358979323846
-#endif
-
 #include "libs/linalg/linalg.h"
 using namespace linalg::aliases;
-#include "libs/libGMisc3DMath/libGMisc3DMath.hpp"
 #include "libs/libGCollision2/libGCollision2.hpp"
 
 struct GGizmo3D {
@@ -18,11 +12,8 @@ struct GGizmo3D {
 
         GGizmo3D(
                 float3 target_pos,
-                float3 camera_pos,
-                float length = 1.0f/4.0f, float width = 1.0f/32.0f
+                float length = 1.0f/4.0f, float width = 1.0f/32.0f  // to keep same size on screen, multiply both by: `length(target_pos - camera_pos)`
         ) {
-                const float scale = linalg::length(target_pos - camera_pos);
-                length *= scale; width *= scale;
                 aabbs[WidgetIndex::X_POSITIVE] = {{target_pos.x+width, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x+width + length/2.0f, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
                 aabbs[WidgetIndex::X_NEGATIVE] = {{target_pos.x-width - length/2.0f, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x-width, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
                 aabbs[WidgetIndex::Y_POSITIVE] = {{target_pos.x - width/2.0f, target_pos.y+width, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y+width + length/2.0f, target_pos.z + width/2.0f}};
@@ -31,39 +22,16 @@ struct GGizmo3D {
                 aabbs[WidgetIndex::Z_NEGATIVE] = {{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z-width - length/2.0f}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z-width}};
         }
 
-        WidgetIndex Pick() {
-                // TODO
-        }
-
-        float Delta() {
-                // TODO
+        WidgetIndex Pick(
+                float3 ray_origin,  // in most cases should be position of camera
+                float3 ray_dir  // ex.: screen-to-world ray dir for cursor picking
+        ) {
+                return (WidgetIndex)gcollision2::IntersectRayAABBs(
+                        ray_origin, ray_dir,
+                        aabbs, WidgetIndex::_count, 0, sizeof(gcollision2::AABB)
+                );
         }
 };
-
-//         WidgetIndex Pick(
-//                 std::array<gcollision2::AABB, WidgetIndex::_count>* widget_aabbs,
-//                 int mouse_x, int mouse_y,
-//                 float3 target_pos,
-//                 float3 camera_pos,
-//                 int window_width, int window_height,
-//                 float4x4* viewProjection,
-//                 float widget_length = 1.0f/4.0f, float widget_width = 1.0f/32.0f
-//         ) {
-//                 WidgetIndex selected_widget = WidgetIndex::NONE;
-//
-//                 const float3 ray_dir = GMisc3DMath::ScreenToWorldRay(mouse_x, mouse_y, window_width, window_height, viewProjection);
-//                 float closest_hit_widget_distance = FLT_MAX;
-//                 float distance;
-//                 for (int i = 0; i < WidgetIndex::_count; i++) {
-//                         if (gcollision2::IntersectRayAABB(camera_pos, ray_dir,
-//                                 (*aabbs)[i], &distance
-//                         )) if (distance < closest_hit_widget_distance) { closest_hit_widget_distance = distance;
-//                                 selected_widget = (WidgetIndex)i;
-//                         }
-//                 }
-//
-//                 return selected_widget;
-//         }
 
 
 

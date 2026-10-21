@@ -1,6 +1,3 @@
-[submodule "libs/libGMisc3DMath"]
-	path = libs/libGMisc3DMath
-	url = https://github.com/GeeTwentyFive/libGMisc3DMath.git
 [submodule "libs/libGCollision2"]
 	path = libs/libGCollision2
 	url = https://github.com/GeeTwentyFive/libGCollision2.git
