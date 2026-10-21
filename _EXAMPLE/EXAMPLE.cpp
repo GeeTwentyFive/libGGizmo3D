@@ -17,6 +17,14 @@ using namespace linalg::aliases;
 #include <iostream>
 
 
+const float GIZMO_WIDGET_LENGTH = 1.0f/4.0f;
+const float GIZMO_WIDGET_WIDTH = 1.0f/32.0f;
+const uint32_t GIZMO_WIDGET_COLORS[GGizmo3D::WidgetIndex::_count] = {
+        0xFF0000FF, 0x800000FF, // X+, X-
+        0x00FF00FF, 0x008000FF, // Y+, Y-
+        0x0000FFFF, 0x000080FF  // Z+, Z-
+};
+
 const double TARGET_FRAMETIME_MS = 2.0;  // Should be a power-of-2 (like 1.0, 2.0, 4.0, 8.0) (to align as fraction/multiple of USB input report rate)
 
 const int CAMERA_SENSITIVITY = 16;
@@ -71,12 +79,25 @@ int main() { try {
 
                 // -- GIZMO SECTION --
 
+                const float gizmo_scale = linalg::length(*(float3*)cube_mesh_instance->position - *(float3*)gr3d.camera_pos);
+                GGizmo3D gizmo(
+                        *(float3*)cube_mesh_instance->position,
+                        GIZMO_WIDGET_LENGTH * gizmo_scale, GIZMO_WIDGET_WIDTH * gizmo_scale
+                );
                 // TODO
+                for (int i = 0; i < GGizmo3D::WidgetIndex::_count; i++) {
+                        glr3d.DrawBox(
+                                gizmo.aabbs[i].min.x, gizmo.aabbs[i].min.y, gizmo.aabbs[i].min.z,
+                                gizmo.aabbs[i].max.x, gizmo.aabbs[i].max.y, gizmo.aabbs[i].max.z,
+                                GIZMO_WIDGET_COLORS[i]
+                        );
+                }
 
                 glViewport(0, 0, gw.window_width, gw.window_height);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 gr3d.DrawFrame(gw.window_width, gw.window_height);
                 glClear(GL_DEPTH_BUFFER_BIT);  // so that the gizmo draws over everything else
+                glr3d.camera_pos[0] = gr3d.camera_pos[0]; glr3d.camera_pos[1] = gr3d.camera_pos[1]; glr3d.camera_pos[2] = gr3d.camera_pos[2]; glr3d.camera_yaw = gr3d.camera_yaw; glr3d.camera_pitch = gr3d.camera_pitch; glr3d.camera_fov = gr3d.camera_fov; glr3d.camera_near = gr3d.camera_near; glr3d.camera_far = gr3d.camera_far;
                 glr3d.DrawFrame(gw.window_width, gw.window_height);
         }
 return 0; } catch (const std::exception& e) { std::cout << e.what() << std::endl; return 1; } }
