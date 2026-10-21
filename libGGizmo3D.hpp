@@ -1,8 +1,6 @@
 // https://github.com/GeeTwentyFive/libGGizmo3D
 #pragma once
 
-#include <array>
-#include <tuple>
 #include <math.h>
 #ifndef M_PI  // (Windows fix)
 #define M_PI 3.14159265358979323846
@@ -13,68 +11,59 @@ using namespace linalg::aliases;
 #include "libs/libGMisc3DMath/libGMisc3DMath.hpp"
 #include "libs/libGCollision2/libGCollision2.hpp"
 
-namespace GGizmo3D {
+struct GGizmo3D {
         enum WidgetIndex { NONE = -1, X_POSITIVE = 0, X_NEGATIVE = 1, Y_POSITIVE = 2, Y_NEGATIVE = 3, Z_POSITIVE = 4, Z_NEGATIVE = 5, _count };
-        
-        std::array<gcollision2::AABB, WidgetIndex::_count> GenerateWidgetAABBs(
+
+        gcollision2::AABB aabbs[WidgetIndex::_count];
+
+        GGizmo3D(
                 float3 target_pos,
                 float3 camera_pos,
                 float length = 1.0f/4.0f, float width = 1.0f/32.0f
         ) {
                 const float scale = linalg::length(target_pos - camera_pos);
                 length *= scale; width *= scale;
-                return {
-                        gcollision2::AABB{{target_pos.x+width, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x+width + length/2.0f, target_pos.y + width/2.0f, target_pos.z + width/2.0f}},
-                        gcollision2::AABB{{target_pos.x-width - length/2.0f, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x-width, target_pos.y + width/2.0f, target_pos.z + width/2.0f}},
-                        gcollision2::AABB{{target_pos.x - width/2.0f, target_pos.y+width, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y+width + length/2.0f, target_pos.z + width/2.0f}},
-                        gcollision2::AABB{{target_pos.x - width/2.0f, target_pos.y-width - length/2.0f, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y-width, target_pos.z + width/2.0f}},
-                        gcollision2::AABB{{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z+width}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z+width + length/2.0f}},
-                        gcollision2::AABB{{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z-width - length/2.0f}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z-width}}
-                };
+                aabbs[WidgetIndex::X_POSITIVE] = {{target_pos.x+width, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x+width + length/2.0f, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::X_NEGATIVE] = {{target_pos.x-width - length/2.0f, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x-width, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::Y_POSITIVE] = {{target_pos.x - width/2.0f, target_pos.y+width, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y+width + length/2.0f, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::Y_NEGATIVE] = {{target_pos.x - width/2.0f, target_pos.y-width - length/2.0f, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y-width, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::Z_POSITIVE] = {{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z+width}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z+width + length/2.0f}};
+                aabbs[WidgetIndex::Z_NEGATIVE] = {{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z-width - length/2.0f}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z-width}};
         }
 
-        WidgetIndex Pick( // TODO?: Make more general? Any # of AABBs? <- NEW LIB?
-                std::array<gcollision2::AABB, WidgetIndex::_count>* widget_aabbs,
-                int mouse_x, int mouse_y,
-                float3 target_pos,
-                float3 camera_pos,
-                int window_width, int window_height,
-                float4x4* viewProjection,
-                float widget_length = 1.0f/4.0f, float widget_width = 1.0f/32.0f
-        ) {
-                WidgetIndex selected_widget = WidgetIndex::NONE;
-
-                const float3 ray_dir = GMisc3DMath::ScreenToWorldRay(mouse_x, mouse_y, window_width, window_height, viewProjection);
-                float closest_hit_widget_distance = FLT_MAX;
-                float distance;
-                for (int i = 0; i < WidgetIndex::_count; i++) {
-                        if (gcollision2::IntersectRayAABB(camera_pos, ray_dir,
-                                (*aabbs)[i], &distance
-                        )) if (distance < closest_hit_widget_distance) { closest_hit_widget_distance = distance;
-                                selected_widget = (WidgetIndex)i;
-                        }
-                }
-
-                return selected_widget;
+        WidgetIndex Pick() {
+                // TODO
         }
 
-        // std::tuple<
-        //         float,
-        //         WidgetIndex,
-        //         std::array<gcollision2::AABB, WidgetIndex::_count>
-        // > Delta(
-        //         int mouse_x, int mouse_y,
-        //         int mouse_x_delta, int mouse_y_delta,
-        //         float3 target_pos,
-        //         float3 camera_pos,
-        //         int window_width, int window_height,
-        //         float4x4* viewProjection,
-        //         std::array<gcollision2::AABB, WidgetIndex::_count>* OUT_widget_aabbs,
-        //         float widget_length = 1.0f/4.0f, float widget_width = 1.0f/32.0f
-        // ) {
-        //         // TODO
-        // }
-}
+        float Delta() {
+                // TODO
+        }
+};
+
+//         WidgetIndex Pick(
+//                 std::array<gcollision2::AABB, WidgetIndex::_count>* widget_aabbs,
+//                 int mouse_x, int mouse_y,
+//                 float3 target_pos,
+//                 float3 camera_pos,
+//                 int window_width, int window_height,
+//                 float4x4* viewProjection,
+//                 float widget_length = 1.0f/4.0f, float widget_width = 1.0f/32.0f
+//         ) {
+//                 WidgetIndex selected_widget = WidgetIndex::NONE;
+//
+//                 const float3 ray_dir = GMisc3DMath::ScreenToWorldRay(mouse_x, mouse_y, window_width, window_height, viewProjection);
+//                 float closest_hit_widget_distance = FLT_MAX;
+//                 float distance;
+//                 for (int i = 0; i < WidgetIndex::_count; i++) {
+//                         if (gcollision2::IntersectRayAABB(camera_pos, ray_dir,
+//                                 (*aabbs)[i], &distance
+//                         )) if (distance < closest_hit_widget_distance) { closest_hit_widget_distance = distance;
+//                                 selected_widget = (WidgetIndex)i;
+//                         }
+//                 }
+//
+//                 return selected_widget;
+//         }
 
 
 
