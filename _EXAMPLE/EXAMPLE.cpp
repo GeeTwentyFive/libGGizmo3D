@@ -7,6 +7,7 @@
 using namespace linalg::aliases;
 #include <GFramePacer/GFramePacer.hpp>
 #include <GLineRenderer3D.hpp>
+#include <libGMisc3DMath/libGMisc3DMath.hpp>
 
 #include <stdexcept>
 #include <string>
@@ -77,21 +78,54 @@ int main() { try {
                         if (gw.key_states[GWindower::KEY_ZERO]) { gr3d.camera_pos[0] = 0; gr3d.camera_pos[1] = 0; gr3d.camera_pos[2] = 0; }
                 }
 
+                static int previous_mouse_x = gw.window_width, previous_mouse_y = gw.window_height;
+                const int mouse_x_delta = gw.mouse_x - previous_mouse_x;
+                const int mouse_y_delta = gw.mouse_y - previous_mouse_y;
+
                 // -- GIZMO SECTION --
+
+                static bool select_gizmo = false, last_select_gizmo_state = false;
+                last_select_gizmo_state = select_gizmo;
+                select_gizmo = gw.mouse_button_states[GWindower::MOUSEBUTTON_LEFT];
+                const bool select_gizmo_just_pressed = select_gizmo && (last_select_gizmo_state == false);
+
+                static GGizmo3D::WidgetIndex active_gizmo_widget = GGizmo3D::WidgetIndex::NONE;
 
                 const float gizmo_scale = linalg::length(*(float3*)cube_mesh_instance->position - *(float3*)gr3d.camera_pos);
                 GGizmo3D gizmo(
                         *(float3*)cube_mesh_instance->position,
                         GIZMO_WIDGET_LENGTH * gizmo_scale, GIZMO_WIDGET_WIDTH * gizmo_scale
                 );
-                // TODO
-                for (int i = 0; i < GGizmo3D::WidgetIndex::_count; i++) {
-                        glr3d.DrawBox(
-                                gizmo.aabbs[i].min.x, gizmo.aabbs[i].min.y, gizmo.aabbs[i].min.z,
-                                gizmo.aabbs[i].max.x, gizmo.aabbs[i].max.y, gizmo.aabbs[i].max.z,
-                                GIZMO_WIDGET_COLORS[i]
+
+                if (!select_gizmo || controlling_camera) active_gizmo_widget = GGizmo3D::WidgetIndex::NONE;
+                else if (select_gizmo_just_pressed) {
+                        active_gizmo_widget = gizmo.Pick(
+                                *(float3*)gr3d.camera_pos,
+                                GMisc3DMath::ScreenToWorldRay(gw.mouse_x, gw.mouse_y, gw.window_width, gw.window_height, (float4x4*)gr3d.ViewProjection())
                         );
                 }
+                switch (active_gizmo_widget) { default: { for (int i = 0; i < GGizmo3D::WidgetIndex::_count; i++) { glr3d.DrawBox(gizmo.aabbs[i].min.x, gizmo.aabbs[i].min.y, gizmo.aabbs[i].min.z, gizmo.aabbs[i].max.x, gizmo.aabbs[i].max.y, gizmo.aabbs[i].max.z, GIZMO_WIDGET_COLORS[i]); } } break;
+                        case GGizmo3D::WidgetIndex::X_POSITIVE: {
+                                // TODO
+                        } break;
+                        case GGizmo3D::WidgetIndex::X_NEGATIVE: {
+                                // TODO
+                        } break;
+                        case GGizmo3D::WidgetIndex::Y_POSITIVE: {
+                                // TODO
+                        } break;
+                        case GGizmo3D::WidgetIndex::Y_NEGATIVE: {
+                                // TODO
+                        } break;
+                        case GGizmo3D::WidgetIndex::Z_POSITIVE: {
+                                // TODO
+                        } break;
+                        case GGizmo3D::WidgetIndex::Z_NEGATIVE: {
+                                // TODO
+                        } break;
+                }
+
+                previous_mouse_x = gw.mouse_x; previous_mouse_y = gw.mouse_y;
 
                 glViewport(0, 0, gw.window_width, gw.window_height);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
