@@ -14,12 +14,12 @@ struct GGizmo3D {
                 float3 target_pos,
                 float length = 1.0f/4.0f, float width = 1.0f/32.0f  // to keep same size on screen, multiply both by: `length(target_pos - camera_pos)`
         ) {
-                aabbs[WidgetIndex::X_POSITIVE] = {{target_pos.x+width/2.0f, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x+width/2.0f + length/2.0f, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
-                aabbs[WidgetIndex::X_NEGATIVE] = {{target_pos.x-width/2.0f - length/2.0f, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x-width/2.0f, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
-                aabbs[WidgetIndex::Y_POSITIVE] = {{target_pos.x - width/2.0f, target_pos.y+width/2.0f, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y+width/2.0f + length/2.0f, target_pos.z + width/2.0f}};
-                aabbs[WidgetIndex::Y_NEGATIVE] = {{target_pos.x - width/2.0f, target_pos.y-width/2.0f - length/2.0f, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y-width/2.0f, target_pos.z + width/2.0f}};
-                aabbs[WidgetIndex::Z_POSITIVE] = {{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z+width/2.0f}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z+width/2.0f + length/2.0f}};
-                aabbs[WidgetIndex::Z_NEGATIVE] = {{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z-width/2.0f - length/2.0f}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z-width/2.0f}};
+                aabbs[WidgetIndex::X_POSITIVE] = {{target_pos.x, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x + length/2.0f, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::X_NEGATIVE] = {{target_pos.x - length/2.0f, target_pos.y - width/2.0f, target_pos.z - width/2.0f}, {target_pos.x, target_pos.y + width/2.0f, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::Y_POSITIVE] = {{target_pos.x - width/2.0f, target_pos.y, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y + length/2.0f, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::Y_NEGATIVE] = {{target_pos.x - width/2.0f, target_pos.y - length/2.0f, target_pos.z - width/2.0f}, {target_pos.x + width/2.0f, target_pos.y, target_pos.z + width/2.0f}};
+                aabbs[WidgetIndex::Z_POSITIVE] = {{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z + length/2.0f}};
+                aabbs[WidgetIndex::Z_NEGATIVE] = {{target_pos.x - width/2.0f, target_pos.y - width/2.0f, target_pos.z - length/2.0f}, {target_pos.x + width/2.0f, target_pos.y + width/2.0f, target_pos.z}};
         }
 
         WidgetIndex Pick(

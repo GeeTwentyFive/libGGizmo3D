@@ -21,8 +21,8 @@ using namespace linalg::aliases;
 const float GIZMO_WIDGET_LENGTH = 1.0f/4.0f;
 const float GIZMO_WIDGET_WIDTH = 1.0f/32.0f;
 const uint32_t GIZMO_WIDGET_COLORS[GGizmo3D::WidgetIndex::_count] = {
-        0xFF0000FF, 0x800000FF, // X+, X-
-        0x00FF00FF, 0x008000FF, // Y+, Y-
+        0xFF0000FF, 0xAA0000FF, // X+, X-
+        0x00FF00FF, 0x00AA00FF, // Y+, Y-
         0x0000FFFF, 0x000080FF  // Z+, Z-
 };
 
@@ -78,11 +78,14 @@ int main() { try {
                         if (gw.key_states[GWindower::KEY_ZERO]) { gr3d.camera_pos[0] = 0; gr3d.camera_pos[1] = 0; gr3d.camera_pos[2] = 0; }
                 }
 
-                static int previous_mouse_x = gw.window_width, previous_mouse_y = gw.window_height;
-                const int mouse_x_delta = gw.mouse_x - previous_mouse_x;
-                const int mouse_y_delta = gw.mouse_y - previous_mouse_y;
-
                 // -- GIZMO SECTION --
+
+                const bool rotate = gw.key_states[GWindower::KEY_LEFT_SHIFT];
+                const bool scale = gw.key_states[GWindower::KEY_LEFT_ALT];
+
+                static int previous_cursor_x = gw.window_width, previous_cursor_y = gw.window_height;
+                const int cursor_x_delta = (!controlling_camera) ? (gw.mouse_x - previous_cursor_x) : 0;
+                const int cursor_y_delta = (!controlling_camera) ? (gw.mouse_y - previous_cursor_y) : 0;
 
                 static bool select_gizmo = false, last_select_gizmo_state = false;
                 last_select_gizmo_state = select_gizmo;
@@ -96,7 +99,6 @@ int main() { try {
                         *(float3*)cube_mesh_instance->position,
                         GIZMO_WIDGET_LENGTH * gizmo_scale, GIZMO_WIDGET_WIDTH * gizmo_scale
                 );
-
                 if (!select_gizmo || controlling_camera) active_gizmo_widget = GGizmo3D::WidgetIndex::NONE;
                 else if (select_gizmo_just_pressed) {
                         active_gizmo_widget = gizmo.Pick(
@@ -104,28 +106,38 @@ int main() { try {
                                 GMisc3DMath::ScreenToWorldRay(gw.mouse_x, gw.mouse_y, gw.window_width, gw.window_height, (float4x4*)gr3d.ViewProjection())
                         );
                 }
-                switch (active_gizmo_widget) { default: { for (int i = 0; i < GGizmo3D::WidgetIndex::_count; i++) { glr3d.DrawBox(gizmo.aabbs[i].min.x, gizmo.aabbs[i].min.y, gizmo.aabbs[i].min.z, gizmo.aabbs[i].max.x, gizmo.aabbs[i].max.y, gizmo.aabbs[i].max.z, GIZMO_WIDGET_COLORS[i]); } } break;
-                        case GGizmo3D::WidgetIndex::X_POSITIVE: {
-                                // TODO
+                static auto DrawGizmoWidget = [&](GGizmo3D::WidgetIndex widget_index) { glr3d.DrawBox(gizmo.aabbs[widget_index].min.x, gizmo.aabbs[widget_index].min.y, gizmo.aabbs[widget_index].min.z, gizmo.aabbs[widget_index].max.x, gizmo.aabbs[widget_index].max.y, gizmo.aabbs[widget_index].max.z, GIZMO_WIDGET_COLORS[widget_index]); };
+                switch (active_gizmo_widget) { default: { for (int i = 0; i < GGizmo3D::WidgetIndex::_count; i++) { DrawGizmoWidget((GGizmo3D::WidgetIndex)i); } } break;
+                        case GGizmo3D::WidgetIndex::X_POSITIVE: case GGizmo3D::WidgetIndex::X_NEGATIVE: {
+                                if (rotate) { DrawGizmoWidget(GGizmo3D::WidgetIndex::X_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::X_NEGATIVE);
+                                        // TODO
+                                } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
+                                        // TODO
+                                } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::X_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::X_NEGATIVE);
+                                        // TODO
+                                }
                         } break;
-                        case GGizmo3D::WidgetIndex::X_NEGATIVE: {
-                                // TODO
+                        case GGizmo3D::WidgetIndex::Y_POSITIVE: case GGizmo3D::WidgetIndex::Y_NEGATIVE: {
+                                if (rotate) { DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_NEGATIVE);
+                                        // TODO
+                                } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
+                                        // TODO
+                                } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_NEGATIVE);
+                                        // TODO
+                                }
                         } break;
-                        case GGizmo3D::WidgetIndex::Y_POSITIVE: {
-                                // TODO
-                        } break;
-                        case GGizmo3D::WidgetIndex::Y_NEGATIVE: {
-                                // TODO
-                        } break;
-                        case GGizmo3D::WidgetIndex::Z_POSITIVE: {
-                                // TODO
-                        } break;
-                        case GGizmo3D::WidgetIndex::Z_NEGATIVE: {
-                                // TODO
+                        case GGizmo3D::WidgetIndex::Z_POSITIVE: case GGizmo3D::WidgetIndex::Z_NEGATIVE: {
+                                if (rotate) { DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_NEGATIVE);
+                                        // TODO
+                                } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
+                                        // TODO
+                                } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_NEGATIVE);
+                                        // TODO
+                                }
                         } break;
                 }
 
-                previous_mouse_x = gw.mouse_x; previous_mouse_y = gw.mouse_y;
+                previous_cursor_x = gw.mouse_x; previous_cursor_y = gw.mouse_y;
 
                 glViewport(0, 0, gw.window_width, gw.window_height);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
