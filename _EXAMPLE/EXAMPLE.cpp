@@ -16,6 +16,7 @@ using namespace linalg::aliases;
 #define M_PI 3.14159265358979323846
 #endif
 #include <iostream>
+#include <limits.h>
 
 
 const float GIZMO_WIDGET_LENGTH = 1.0f/4.0f;
@@ -25,6 +26,9 @@ const uint32_t GIZMO_WIDGET_COLORS[GGizmo3D::WidgetIndex::_count] = {
         0x00FF00FF, 0x00AA00FF, // Y+, Y-
         0x0000FFFF, 0x000080FF  // Z+, Z-
 };
+const float GIZMO_TRANSLATE_MULTIPLIER = 1.0f/16.0f;
+const float GIZMO_ROTATE_MULTIPLIER = M_PI/32.0f;
+const float GIZMO_SCALE_MULTIPLIER = 1.0f/16.0f;
 
 const double TARGET_FRAMETIME_MS = 2.0;  // Should be a power-of-2 (like 1.0, 2.0, 4.0, 8.0) (to align as fraction/multiple of USB input report rate)
 
@@ -114,7 +118,8 @@ int main() { try {
                                 } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
                                         // TODO
                                 } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::X_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::X_NEGATIVE);
-                                        // TODO
+                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*1 && gr3d.camera_yaw < (USHRT_MAX/4)*3) cube_mesh_instance->position[0] += cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                                        else cube_mesh_instance->position[0] -= cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
                                 }
                         } break;
                         case GGizmo3D::WidgetIndex::Y_POSITIVE: case GGizmo3D::WidgetIndex::Y_NEGATIVE: {
@@ -123,7 +128,7 @@ int main() { try {
                                 } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
                                         // TODO
                                 } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_NEGATIVE);
-                                        // TODO
+                                        cube_mesh_instance->position[1] += (-cursor_y_delta) * GIZMO_TRANSLATE_MULTIPLIER;
                                 }
                         } break;
                         case GGizmo3D::WidgetIndex::Z_POSITIVE: case GGizmo3D::WidgetIndex::Z_NEGATIVE: {
@@ -132,7 +137,8 @@ int main() { try {
                                 } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
                                         // TODO
                                 } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_NEGATIVE);
-                                        // TODO
+                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*0 && gr3d.camera_yaw < (USHRT_MAX/4)*2) cube_mesh_instance->position[2] -= cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                                        else cube_mesh_instance->position[2] += cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
                                 }
                         } break;
                 }
