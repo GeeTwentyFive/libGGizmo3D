@@ -26,9 +26,9 @@ const uint32_t GIZMO_WIDGET_COLORS[GGizmo3D::WidgetIndex::_count] = {
         0x00FF00FF, 0x00AA00FF, // Y+, Y-
         0x0000FFFF, 0x000080FF  // Z+, Z-
 };
-const float GIZMO_TRANSLATE_MULTIPLIER = 1.0f/16.0f;
-const float GIZMO_ROTATE_MULTIPLIER = M_PI/32.0f;
-const float GIZMO_SCALE_MULTIPLIER = 1.0f/16.0f;
+const float GIZMO_TRANSLATE_MULTIPLIER = 1.0f/64.0f;
+const float GIZMO_ROTATE_MULTIPLIER = M_PI/64.0f;
+const float GIZMO_SCALE_MULTIPLIER = 1.0f/64.0f;
 
 const double TARGET_FRAMETIME_MS = 2.0;  // Should be a power-of-2 (like 1.0, 2.0, 4.0, 8.0) (to align as fraction/multiple of USB input report rate)
 
