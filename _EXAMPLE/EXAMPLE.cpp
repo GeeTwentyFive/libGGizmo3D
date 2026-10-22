@@ -62,39 +62,33 @@ int main() { try {
         for (;;) { // MAIN LOOP
                 const double delta_time = gfp.Wait();
 
-                const bool controlling_camera = gw.mouse_button_states[GWindower::MOUSEBUTTON_RIGHT];
+                const bool controlling_camera = gw.input_states[GWindower::MOUSEBUTTON_RIGHT];
 
-                if (!gw.Update(controlling_camera) || gw.key_states[GWindower::KEY_ESCAPE]) break;
+                if (!gw.Update(controlling_camera) || gw.input_states[GWindower::KEY_ESCAPE]) break;
 
                 if (controlling_camera) {
-                        gr3d.camera_yaw += gw.mouse_x * CAMERA_SENSITIVITY;
-                        gr3d.camera_pitch += gw.mouse_y * CAMERA_SENSITIVITY;
-                        gr3d.camera_pos[1] += (-gw.key_states[GWindower::KEY_LEFT_CONTROL] + gw.key_states[GWindower::KEY_SPACE]) * CAMERA_MOVE_SPEED * delta_time;
+                        gr3d.camera_yaw += gw.mouse_x_delta * CAMERA_SENSITIVITY;
+                        gr3d.camera_pitch += gw.mouse_y_delta * CAMERA_SENSITIVITY;
+                        gr3d.camera_pos[1] += (-gw.input_states[GWindower::KEY_LEFT_CONTROL] + gw.input_states[GWindower::KEY_SPACE]) * CAMERA_MOVE_SPEED * delta_time;
                         float2 move_dir = float2{
-                                (float)(-gw.key_states[GWindower::KEY_A] + gw.key_states[GWindower::KEY_D]),
-                                (float)(-gw.key_states[GWindower::KEY_W] + gw.key_states[GWindower::KEY_S])
+                                (float)(-gw.input_states[GWindower::KEY_A] + gw.input_states[GWindower::KEY_D]),
+                                (float)(-gw.input_states[GWindower::KEY_W] + gw.input_states[GWindower::KEY_S])
                         };
                         if (linalg::length2(move_dir) != 0) move_dir = linalg::normalize(move_dir);  // (to avoid division by zero)
                         move_dir = linalg::rot((float)(gr3d.camera_yaw*(2*M_PI/65536)), move_dir);
                         gr3d.camera_pos[0] += -move_dir.x * CAMERA_MOVE_SPEED * delta_time;
                         gr3d.camera_pos[2] += -move_dir.y * CAMERA_MOVE_SPEED * delta_time;
 
-                        if (gw.key_states[GWindower::KEY_ZERO]) { gr3d.camera_pos[0] = 0; gr3d.camera_pos[1] = 0; gr3d.camera_pos[2] = 0; }
+                        if (gw.input_states[GWindower::KEY_ZERO]) { gr3d.camera_pos[0] = 0; gr3d.camera_pos[1] = 0; gr3d.camera_pos[2] = 0; }
                 }
 
                 // -- GIZMO SECTION --
 
-                const bool rotate = gw.key_states[GWindower::KEY_LEFT_SHIFT];
-                const bool scale = gw.key_states[GWindower::KEY_LEFT_ALT];
+                const bool rotate = gw.input_states[GWindower::KEY_LEFT_SHIFT];
+                const bool scale = gw.input_states[GWindower::KEY_LEFT_ALT];
 
-                static int previous_cursor_x = gw.window_width, previous_cursor_y = gw.window_height;
-                const int cursor_x_delta = (!controlling_camera) ? (gw.mouse_x - previous_cursor_x) : 0;
-                const int cursor_y_delta = (!controlling_camera) ? (gw.mouse_y - previous_cursor_y) : 0;
-
-                static bool select_gizmo = false, last_select_gizmo_state = false;
-                last_select_gizmo_state = select_gizmo;
-                select_gizmo = gw.mouse_button_states[GWindower::MOUSEBUTTON_LEFT];
-                const bool select_gizmo_just_pressed = select_gizmo && (last_select_gizmo_state == false);
+                const bool select_gizmo = gw.input_states[GWindower::MOUSEBUTTON_LEFT];
+                const bool select_gizmo_just_pressed = select_gizmo && (gw.last_input_states[GWindower::MOUSEBUTTON_LEFT] == false);
 
                 static GGizmo3D::WidgetIndex active_gizmo_widget = GGizmo3D::WidgetIndex::NONE;
 
@@ -107,7 +101,7 @@ int main() { try {
                 else if (select_gizmo_just_pressed) {
                         active_gizmo_widget = gizmo.Pick(
                                 *(float3*)gr3d.camera_pos,
-                                GMisc3DMath::ScreenToWorldRay(gw.mouse_x, gw.mouse_y, gw.window_width, gw.window_height, (float4x4*)gr3d.ViewProjection())
+                                GMisc3DMath::ScreenToWorldRay(gw.cursor_x, gw.cursor_y, gw.window_width, gw.window_height, (float4x4*)gr3d.ViewProjection())
                         );
                 }
                 static auto DrawGizmoWidget = [&](GGizmo3D::WidgetIndex widget_index) { glr3d.DrawBox(gizmo.aabbs[widget_index].min.x, gizmo.aabbs[widget_index].min.y, gizmo.aabbs[widget_index].min.z, gizmo.aabbs[widget_index].max.x, gizmo.aabbs[widget_index].max.y, gizmo.aabbs[widget_index].max.z, GIZMO_WIDGET_COLORS[widget_index]); };
@@ -118,8 +112,8 @@ int main() { try {
                                 } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
                                         // TODO
                                 } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::X_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::X_NEGATIVE);
-                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*1 && gr3d.camera_yaw < (USHRT_MAX/4)*3) cube_mesh_instance->position[0] += cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
-                                        else cube_mesh_instance->position[0] -= cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*1 && gr3d.camera_yaw < (USHRT_MAX/4)*3) cube_mesh_instance->position[0] += gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                                        else cube_mesh_instance->position[0] -= gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
                                 }
                         } break;
                         case GGizmo3D::WidgetIndex::Y_POSITIVE: case GGizmo3D::WidgetIndex::Y_NEGATIVE: {
@@ -128,7 +122,7 @@ int main() { try {
                                 } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
                                         // TODO
                                 } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_NEGATIVE);
-                                        cube_mesh_instance->position[1] += (-cursor_y_delta) * GIZMO_TRANSLATE_MULTIPLIER;
+                                        cube_mesh_instance->position[1] += (-gw.mouse_y_delta) * GIZMO_TRANSLATE_MULTIPLIER;
                                 }
                         } break;
                         case GGizmo3D::WidgetIndex::Z_POSITIVE: case GGizmo3D::WidgetIndex::Z_NEGATIVE: {
@@ -137,13 +131,11 @@ int main() { try {
                                 } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
                                         // TODO
                                 } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_NEGATIVE);
-                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*0 && gr3d.camera_yaw < (USHRT_MAX/4)*2) cube_mesh_instance->position[2] -= cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
-                                        else cube_mesh_instance->position[2] += cursor_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*0 && gr3d.camera_yaw < (USHRT_MAX/4)*2) cube_mesh_instance->position[2] -= gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                                        else cube_mesh_instance->position[2] += gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
                                 }
                         } break;
                 }
-
-                previous_cursor_x = gw.mouse_x; previous_cursor_y = gw.mouse_y;
 
                 glViewport(0, 0, gw.window_width, gw.window_height);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
