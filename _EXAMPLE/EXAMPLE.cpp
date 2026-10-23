@@ -84,19 +84,14 @@ int main() { try {
 
                 // -- GIZMO SECTION --
 
-                const bool rotate = gw.input_states[GWindower::KEY_LEFT_SHIFT];
-                const bool scale = gw.input_states[GWindower::KEY_LEFT_ALT];
-
-                const bool select_gizmo = gw.input_states[GWindower::MOUSEBUTTON_LEFT];
-                const bool select_gizmo_just_pressed = select_gizmo && (gw.last_input_states[GWindower::MOUSEBUTTON_LEFT] == false);
-
-                static GGizmo3D::WidgetIndex active_gizmo_widget = GGizmo3D::WidgetIndex::NONE;
-
                 const float gizmo_scale = linalg::length(*(float3*)cube_mesh_instance->position - *(float3*)gr3d.camera_pos);
                 GGizmo3D gizmo(
                         *(float3*)cube_mesh_instance->position,
                         GIZMO_WIDGET_LENGTH * gizmo_scale, GIZMO_WIDGET_WIDTH * gizmo_scale
                 );
+                static GGizmo3D::WidgetIndex active_gizmo_widget = GGizmo3D::WidgetIndex::NONE;
+                const bool select_gizmo = gw.input_states[GWindower::MOUSEBUTTON_LEFT];
+                const bool select_gizmo_just_pressed = select_gizmo && (gw.last_input_states[GWindower::MOUSEBUTTON_LEFT] == false);
                 if (!select_gizmo || controlling_camera) active_gizmo_widget = GGizmo3D::WidgetIndex::NONE;
                 else if (select_gizmo_just_pressed) {
                         active_gizmo_widget = gizmo.Pick(
@@ -104,35 +99,41 @@ int main() { try {
                                 GMisc3DMath::ScreenToWorldRay(gw.cursor_x, gw.cursor_y, gw.window_width, gw.window_height, (float4x4*)gr3d.ViewProjection())
                         );
                 }
+                const bool rotate = gw.input_states[GWindower::KEY_LEFT_SHIFT];
+                const bool scale = gw.input_states[GWindower::KEY_LEFT_ALT];
                 static auto DrawGizmoWidget = [&](GGizmo3D::WidgetIndex widget_index) { glr3d.DrawBox(gizmo.aabbs[widget_index].min.x, gizmo.aabbs[widget_index].min.y, gizmo.aabbs[widget_index].min.z, gizmo.aabbs[widget_index].max.x, gizmo.aabbs[widget_index].max.y, gizmo.aabbs[widget_index].max.z, GIZMO_WIDGET_COLORS[widget_index]); };
                 switch (active_gizmo_widget) { default: { for (int i = 0; i < GGizmo3D::WidgetIndex::_count; i++) { DrawGizmoWidget((GGizmo3D::WidgetIndex)i); } } break;
-                        case GGizmo3D::WidgetIndex::X_POSITIVE: case GGizmo3D::WidgetIndex::X_NEGATIVE: {
-                                if (rotate) { DrawGizmoWidget(GGizmo3D::WidgetIndex::X_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::X_NEGATIVE);
-                                        // TODO
-                                } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
-                                        // TODO
-                                } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::X_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::X_NEGATIVE);
-                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*1 && gr3d.camera_yaw < (USHRT_MAX/4)*3) cube_mesh_instance->position[0] += gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
-                                        else cube_mesh_instance->position[0] -= gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                        case GGizmo3D::WidgetIndex::Y_POSITIVE: case GGizmo3D::WidgetIndex::Y_NEGATIVE: { DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_NEGATIVE);
+                                if (rotate) { const float delta = gw.mouse_x_delta * GIZMO_ROTATE_MULTIPLIER;
+                                        *(float4*)cube_mesh_instance->rotation = linalg::qmul(
+                                                linalg::rotation_quat({0, 1, 0}, delta), *(float4*)cube_mesh_instance->rotation
+                                        );
+                                } else if (scale) { const float delta = (-gw.mouse_y_delta) * GIZMO_SCALE_MULTIPLIER;
+                                        cube_mesh_instance->scale[1] += delta;
+                                } else { const float delta = (-gw.mouse_y_delta) * GIZMO_TRANSLATE_MULTIPLIER;
+                                        cube_mesh_instance->position[1] += delta;
                                 }
                         } break;
-                        case GGizmo3D::WidgetIndex::Y_POSITIVE: case GGizmo3D::WidgetIndex::Y_NEGATIVE: {
-                                if (rotate) { DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_NEGATIVE);
-                                        // TODO
-                                } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
-                                        // TODO
-                                } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Y_NEGATIVE);
-                                        cube_mesh_instance->position[1] += (-gw.mouse_y_delta) * GIZMO_TRANSLATE_MULTIPLIER;
+                        case GGizmo3D::WidgetIndex::X_POSITIVE: case GGizmo3D::WidgetIndex::X_NEGATIVE: { DrawGizmoWidget(GGizmo3D::WidgetIndex::X_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::X_NEGATIVE);
+                                if (rotate) { float delta = (-gw.mouse_y_delta) * GIZMO_ROTATE_MULTIPLIER; if (gr3d.camera_yaw > (USHRT_MAX/4)*1 && gr3d.camera_yaw < (USHRT_MAX/4)*3) delta = -delta;
+                                        *(float4*)cube_mesh_instance->rotation = linalg::qmul(
+                                                linalg::rotation_quat({1, 0, 0}, delta), *(float4*)cube_mesh_instance->rotation
+                                        );
+                                } else if (scale) { float delta = gw.mouse_x_delta * GIZMO_SCALE_MULTIPLIER; if (gr3d.camera_yaw > (USHRT_MAX/4)*1 && gr3d.camera_yaw < (USHRT_MAX/4)*3) delta = -delta;
+                                        cube_mesh_instance->scale[0] += delta;
+                                } else { float delta = gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER; if (gr3d.camera_yaw > (USHRT_MAX/4)*1 && gr3d.camera_yaw < (USHRT_MAX/4)*3) delta = -delta;
+                                        cube_mesh_instance->position[0] -= delta;
                                 }
                         } break;
-                        case GGizmo3D::WidgetIndex::Z_POSITIVE: case GGizmo3D::WidgetIndex::Z_NEGATIVE: {
-                                if (rotate) { DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_NEGATIVE);
-                                        // TODO
-                                } else if (scale) { DrawGizmoWidget(active_gizmo_widget);
-                                        // TODO
-                                } else { DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_NEGATIVE);
-                                        if (gr3d.camera_yaw > (USHRT_MAX/4)*0 && gr3d.camera_yaw < (USHRT_MAX/4)*2) cube_mesh_instance->position[2] -= gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
-                                        else cube_mesh_instance->position[2] += gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER;
+                        case GGizmo3D::WidgetIndex::Z_POSITIVE: case GGizmo3D::WidgetIndex::Z_NEGATIVE: { DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_POSITIVE); DrawGizmoWidget(GGizmo3D::WidgetIndex::Z_NEGATIVE);
+                                if (rotate) { float delta = (-gw.mouse_y_delta) * GIZMO_ROTATE_MULTIPLIER; if (gr3d.camera_yaw > (USHRT_MAX/4)*0 && gr3d.camera_yaw < (USHRT_MAX/4)*2) delta = -delta;
+                                        *(float4*)cube_mesh_instance->rotation = linalg::qmul(
+                                                linalg::rotation_quat({0, 0, 1}, -delta), *(float4*)cube_mesh_instance->rotation
+                                        );
+                                } else if (scale) { float delta = gw.mouse_x_delta * GIZMO_SCALE_MULTIPLIER; if (gr3d.camera_yaw > (USHRT_MAX/4)*0 && gr3d.camera_yaw < (USHRT_MAX/4)*2) delta = -delta;
+                                        cube_mesh_instance->scale[2] += delta;
+                                } else { float delta = gw.mouse_x_delta * GIZMO_TRANSLATE_MULTIPLIER; if (gr3d.camera_yaw > (USHRT_MAX/4)*0 && gr3d.camera_yaw < (USHRT_MAX/4)*2) delta = -delta;
+                                        cube_mesh_instance->position[2] += delta;
                                 }
                         } break;
                 }
