@@ -1,5 +1,6 @@
 // https://github.com/GeeTwentyFive/libGGizmo3D
-#pragma once
+#ifndef _LIBGGIZMO3D_H
+#define _LIBGGIZMO3D_H
 
 #include "libs/linalg/linalg.h"
 using namespace linalg::aliases;
@@ -32,6 +33,8 @@ struct GGizmo3D {
                 );
         }
 };
+
+#endif // _LIBGGIZMO3D_H
 
 
 
