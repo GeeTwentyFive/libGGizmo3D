@@ -3,7 +3,7 @@
 
 #include "libs/linalg/linalg.h"
 using namespace linalg::aliases;
-//#include "libs/libGCollision2/libGCollision2.hpp"
+#include "libs/libGCollision2/libGCollision2.hpp"
 
 struct GGizmo3D {
         enum WidgetIndex { NONE = -1, X_POSITIVE = 0, X_NEGATIVE = 1, Y_POSITIVE = 2, Y_NEGATIVE = 3, Z_POSITIVE = 4, Z_NEGATIVE = 5, _count };
